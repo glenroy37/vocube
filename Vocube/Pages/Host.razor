@@ -1,0 +1,60 @@
+﻿@page "/host"
+@using Vocube.Data
+@inject VocubeService vocubeService;
+
+<div class="row">
+    <div class="col-sm-10 offset-1">
+        @if (vocubeService.CurrentState == VocubeState.FILLING_IN_CUBE) {
+            foreach (var category in vocubeService.Answers) {
+                <h4>@category.Key</h4>
+                <ul>
+                    @foreach (var answer in category.Value) {
+                        <li>
+                            @answer
+                        </li>
+                    }
+                </ul>
+            }
+        }
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-sm-3 offset-5">
+        <input type="text" class="form-control" id="question" @bind=question placeholder="Enter question">
+    </div>
+    <div class="col-sm-1">
+        <button class="btn btn-primary" @onclick="Start">Start</button>
+    </div>
+    <div class="col-sm-1">
+        <button class="btn" @onclick="Exit">Exit</button>
+    </div>
+</div>
+
+@code {
+    private string question = "";
+
+    protected override void OnInitialized() {
+        vocubeService.AnswerStateChange += StateChangeHandler;
+        base.OnInitialized();
+    }
+
+    private void Start() {
+        vocubeService.NewGame(question, new List<string> {
+            "Synonym",
+            "Antonym",
+            "Defintion",
+            "Category",
+            "Example",
+            "Non-Example"
+        });
+    }
+
+    public void Exit() {
+        vocubeService.EndGame();
+    }
+
+    public void StateChangeHandler() {
+        InvokeAsync(base.StateHasChanged);
+    }
+}

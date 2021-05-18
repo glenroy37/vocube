@@ -1,0 +1,51 @@
+﻿@page "/"
+@using Vocube.Data
+@inject VocubeService vocubeService
+
+<div class="row">
+    <div class="col-md-4 offset-md-4 col-sm-10 off-sm-1">
+        @if (clientState == VocubeState.WAITING_FOR_HOST) {
+            <h3>Please wait for your presenter...</h3>
+        } else {
+            <div class="row">
+                <h3>@currentCategory for @vocubeService.Question</h3>
+            </div>
+            <div class="row">
+                <div class="col-sm-10">
+                    <input type="text" class="form-control" id="answer" @bind=answer placeholder="Enter answer" />
+                </div>
+                <div class="col-sm-2">
+                    <button type="submit" class="btn btn-primary" @onclick=SubmitAnswer>Submit</button>
+                </div>
+            </div>
+        }
+    </div>
+
+</div>
+
+@code {
+    private string currentCategory = "";
+    private VocubeState clientState = VocubeState.WAITING_FOR_HOST;
+    private string answer = "";
+
+    protected override void OnInitialized() {
+        if (vocubeService.CurrentState != VocubeState.WAITING_FOR_HOST) {
+            currentCategory = vocubeService.GetRandomCategory();
+            clientState = vocubeService.CurrentState;
+        }
+        vocubeService.StateChange += StateChangeHandler;
+        base.OnInitialized();
+    }
+
+    public void SubmitAnswer() {
+        clientState = VocubeState.WAITING_FOR_HOST;
+        vocubeService.AddToCategory(currentCategory, answer);
+        answer = "";
+    }
+
+    public void StateChangeHandler() {
+        currentCategory = vocubeService.GetRandomCategory();
+        clientState = vocubeService.CurrentState;
+        InvokeAsync(this.StateHasChanged);
+    }
+}
